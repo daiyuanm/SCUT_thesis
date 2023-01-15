@@ -1,5 +1,5 @@
-\documentclass[unicode,master]{scutthesis} % 草稿封面，硕士则添加选项master，博士则去掉。使用正式封面时注释该行
-%\documentclass[unicode,master,pdfcover]{scutthesis} %   % 论文正式封面，pdfcover为可选项，终稿再添加，使用草稿封面时注释该行
+%\documentclass[unicode]{scutthesis} % 草稿封面，硕士则添加选项master，博士则去掉。使用正式封面时注释该行
+\documentclass[unicode,pdfcover]{scutthesis} %   % 论文正式封面，pdfcover为可选项，终稿再添加，使用草稿封面时注释该行
 \usepackage{fontspec,color,array,longtable,graphicx} 
 \usepackage{anyfontsize} %消除字体警告
 \usepackage{enumitem}
@@ -8,6 +8,7 @@
 % \includeonly{chapter04}
 %参考文献设置
 \usepackage[backend=biber,style=gb7714-2015,gbalign=gb7714-2015,gbpub=false,gbnamefmt = lowercase]{biblatex}
+\DefineBibliographyStrings{english}{in={}} \DefineBibliographyStrings{english}{incn={}}
 \addbibresource[location=local]{MyLibrary.bib} % 如果在其他盘，改为相对路径。比如F盘，改为：F/MyLibrary.bib
 \addbibresource[location=local]{mybibfile2.bib} % 无论什么来源的bib文件，只要由参考文献的BibTeX组成，都可以使用此模板。参考文献的BibTeX获取方法可百度
 %页眉页脚设置
@@ -31,8 +32,8 @@
 \usepackage[unicode=true,bookmarks=true,bookmarksnumbered=true,bookmarksopen=false,breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=true]{hyperref}
 \hypersetup{pdftitle={LaTeX模板使用说明},
 	pdfauthor={蒙超恒},
-	pdfsubject={华南理工大学硕士学位论文},
-%%	pdfsubject={华南理工大学博士学位论文},
+%%	pdfsubject={华南理工大学硕士学位论文},
+	pdfsubject={华南理工大学博士学位论文},
 	pdfkeywords={PDF关键字1;PDF关键字2},
 %%		linkcolor=black, anchorcolor=black, citecolor=black, filecolor=black, menucolor=black, urlcolor=black, pdfstartview=FitH}% 黑白，提交版
 	linkcolor=blue, anchorcolor=black, citecolor=red, filecolor=magenta, menucolor=red, urlcolor=magenta, pdfstartview=FitH}% 彩色
