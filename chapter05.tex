@@ -1,5 +1,55 @@
-\chapter{第五章}
-%
+\chapter{轻量化模型的设计与实际部署}
+第 4 章所述的列车底部异常检测模型仅能实现二分类（异常或无异常），但无法进行多分类。不同类型的异常对应不同的风险等级，为实现异常风险等级的划分，根据不同的风险等级对列车下达不同的指令，需要对列车底部的异常进行多分类。动车组序列图像的分辨率为2048×1400像素，最小异常（螺钉缺失）的尺度约为40×40像素，仅占整幅图像的0.05％，最大布条的尺度为384×293像素，占整幅图像的3.924％。动车组列车底部异常的主要特点是异常尺度多样化，多尺度目标检测是动车组列车底部异常检测的一个挑战，尤其是对小尺度目标的检测。本章结合深度学习技术，对基于卷积神经网络的动车组列车底部异常的分类模型进行了研究。
+\section{引言}
+\section{问题分析}
+\section{轻量化模型的设计}
+\subsection{改进Focus模块}
+\subsection{动态机制的设计}
+\subsection{模型检测头的优化}
+\section{实验与结果分析}
+\subsection{实验数据集}
+为了评估本章所提出算法GL-YOLO的性能，将在公开数据集PASCAL VOC及第三章所构建的FODD这两个数据集上同其他先进检测模型进行对比实验。
+\subsubsection*{(1) PASCAL VOC}
+PASCAL VOC\cite{pascalvoc07, pascalvoc12}是一个常用的分类、识别和检测视觉目标的基准数据集。它的特点是包含多样化的场景以及多种物体类别。PASCAL VOC提供了一整套从数据标注到算法评估的标准流程，它采用了一种名为xml的标注方法，数据集中的每一张图片对应一个xml格式的文件，其中包含了该图片的名称、图片尺寸、物体类型、位置、大小、是否完整和预测难度等信息。PASCAL VOC（2005-2012）竞赛的目标主要是进行图像目标检测，数据集中包含了生活中常见的20种物体，包括飞机、自行车、鸟、船、瓶子、公共汽车、小汽车、猫、椅子、奶牛、餐桌、狗、马、摩托车、人、盆栽、羊、沙发、火车和显示器。
+
+PASCAL VOC有两个版本的数据集：VOC2007和VOC2012。VOC2007包含9963张标注过的图片，由train/val/test三部分组成，共标注出24,640个物体。而VOC2012是VOC2007数据集的升级版，一共有11530张图片。VOC2012的trainval/test包含08-11年的所有对应图片，并与VOC2007互斥，trainval中有11540张图片，共27450个物体。VOC2007和VOC2012数据集及二者的并集数据量对比如下表所示。
+\begin{table}[htbp]
+	\centering
+	\small
+	\caption{PASCAL VOC数据集详细信息}
+	\setlength{\tabcolsep}{1.3mm}
+	\begin{tabular}{ccccccccccc}
+		\toprule[2pt]
+		\multirow{2}[4]{*}{} & \multicolumn{2}{c}{训练集} & \multicolumn{2}{c}{验证集} & \multicolumn{2}{c}{训练与验证集} & \multicolumn{2}{c}{测试集} & \multicolumn{2}{c}{全部} \\
+		\cmidrule{2-11}          & 图片数   & 目标数   & 图片数   & 目标数   & 图片数   & 目标数   & 图片数   & 目标数   & 图片数   & 目标数 \\
+		\midrule
+		VOC07 & 2501  & 6301  & 2510  & 6307  & 5011  & 12608 & 4952  & 12032 & 9963  & 24640 \\
+		VOC12 & 5717  & 13609 & 5823  & 13841 & 11540 & 27450 & {\color{red} 11540} & {\color{red} 27450} & {\color{red} 23080} & {\color{red} 54900} \\
+		总计    & 8218  & 19910 & 8333  & 20148 & 16551 & 40058 & {\color{red} 16492} & {\color{red} 39482} & {\color{red} 33043} & {\color{red} 79540} \\
+		\bottomrule[2pt]
+	\end{tabular}%
+	\label{pascal voc}%
+\end{table}%
+
+表中，黑色字体所示数字是官方给定的，由于VOC2012数据集中测试集部分没有公布，因此红色字体所示数字为估计数据，按照PASCAL VOC通常的划分方法，即训练与验证集与测试集各占总数据量的一半。在后续的实验中，本章使用VOC2007的训练集+验证集和VOC2012的训练集+验证集训练，然后使用VOC2007的测试集测试，即在大多数论文中经常看到的07+12方法。
+\subsubsection*{(2) FODD}
+
+\subsection{评价指标}
+在目标检测领域，均值平均精度（mean Average Precision, mAP）和每秒传输帧数（Frame Per Second, FPS）这两个评价指标是衡量目标检测算法准确性及检测速度的权威指标，被广泛应用于评价目标检测算法的性能。此外，由于本文所研究算法将面向实际应用，需要考虑到具体的硬件设备算力。因此，本文在此还将添加模型参数量（Parameters）、运算量（GFLOPs）作为额外的评价指标。下面给出这四个评价指标的具体计算方式：
+\subsubsection*{(1) mAP}
+\subsubsection*{(2) FPS}
+\subsubsection*{(3) Parameters}
+\subsubsection*{(4) GFLOPs}
+\subsection{实验环境及超参数设置}
+\subsection{FODD上的实验结果}
+\subsection{PASCAL VOC上的实验结果}
+\subsection{消融实验}
+\section{模型的实际部署}
+\subsection{x86-gpu 服务器GPU}
+\subsection{x86-gpu 服务器CPU}
+\subsection{arm-gpu手机GPU}
+\subsection{arm-gpu手机CPU}
+\section{本章小结}
 
 
 

@@ -1,189 +1,87 @@
-\chapter{列举环境}
-以下资料来自宏包说明和网络，翻译不一定正确：
+\chapter{全局上下文信息与局部信息相结合的异物检测方法}
+第三章主要针对地铁屏蔽门与列车门间异物检测应用中首先需要解决的数据集构建及数据标注问题进行了探讨和研究。本章在具有标注数据的前提下，主要研究应用基于深度神经网络的目标检测算法解决地铁屏蔽门与列车门间异物检测的实际问题，分析地铁屏蔽门与列车门间异物图像特征，优化基于聚类算法的锚框生成，同时克服了复杂背景下全局信息利用不足的困难，将其同局部信息有效的结合，提高地铁屏蔽门与列车门间异物检测的精度。
 
-在LaTeX中有三种基本的列举(列表)环境，即enumerate(编号)、itemize(分条目)和description(描述)环境。调整latex的列表环境时，使用 enumitem 宏包可以方便的调整间距（注意区分包名和环境名）和自定义编号样式。
+\section{引言}
+我国地铁行业高速发展，运营线路、运营线路总长度、客运量等均居世界前列。为了出行方便，越来越多的市民选择地铁作为主要的出行方式，造成客运量越来越大。尤其在早晚高峰时段，车站的人流更是爆满，许多线路在早晚高峰时段列车最大满载率均超过100\%，部分区段高峰小时最达满载率超过120\%，相应的也产生了一些新的交通安全问题。而地铁屏蔽门与列车门间又是连接站台与列车的唯一乘降通道，是地铁系统的风险空间、乘降瓶颈点和管控核心区域。在地铁屏蔽门与列车门间出现异物，即使是细小的手机、雨伞等遗留物，也可能造成灾难性事故，及时发现异物并判断异物类别，可以提升地铁的运输效率和安全保障。在过去，地铁公司大多使用人工瞭望进行检测。然而，人工瞭望这一工作劳动强度大，且准确性易受地铁环境影响，并不能满足地铁系统要求。后来，地铁公司使用红外光幕、激光光幕、激光扫描等光电传感器来进行异物检测。但是，这些光电传感器仍然存在成本高、盲区大、检测效果不理想等缺陷，同样不能很好地满足需求。近年来，随着视频传感器设备及图像处理技术的发展，一些学者开始研究将计算机和图像处理技术应用于地铁屏蔽门与列车门间的异物检测。当前存在两种形式的视频检测系统：侧装式及顶装式。在检测盲区方面，侧装式系统仍然会存在一定的盲区。而在检测算法方面，侧装式及一部分顶装式检测系统中仍采用背景建模及模板匹配等传统图像处理算法，需人工设计特征且鲁棒性不强，极易受到外界环境影响，且不能自动判断出异物类别，需工作人员进行二次识别，效率低下。因此，使用顶装式检测系统，并改进地铁屏蔽门与列车门间异物检测系统的图像识别算法，提高异物检测精度，实现异物的自动检测具有重要的意义。
 
-\section{调整间距}
-三种基本环境无论哪一种，间距的调整都是一样的。调整间距的参数命令包括两类：垂直间距和水平间距。各种距离的定义如图\ref{enumitem}所示。下图的来源一直找不到，可能是旧版本的宏包说明，新版已经删掉了下面的注释了。
+\section{问题分析}
+地铁屏蔽门与列车门间是连接站台与列车的唯一乘降通道，情况复杂，人员众多，在两门开启关闭过程中，容易出现异物遗留的情况，如手机、雨伞、钱包，乘客等，若不及时发现及处理异物，将会影响地铁列车的正常工作，导致乘客人身安全及地铁运行安全受到威胁。据统计\cite{刘伟铭2019地铁风险空间分析及异物检测系统技术要求}，某城市地铁站在2017年发生造成延误的异物事件共101起，各事件的比例按从大到小排列，如图\ref{异物事件比例}所示：（1）大部分异物事件为雨伞、水瓶、钱包等小异物体遗落站台边缘，占比 35.87\%；（2）由于客流拥挤，列车门启动防夹功能事件，占比 16.30\%；（3）列车门与屏蔽门夹乘客手指、手臂、头发等事件，占比16.30\%；（4）乘客背包包带被夹事件，占比14.13\%；（5）乘客衣服被夹事件，占比9.78\%；（6）最后，其他微小异物（如瓶盖、金属徽章、佛珠等）遗留事件，占比 7.61\%。
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[scale=0.6]{Fig/enumitem1.png}
-	\caption{\label{enumitem}enumitem包对各种间距的定义}
+	\includegraphics[scale=1]{Fig/异物比例.pdf}
+	\caption{\label{异物事件比例}地铁屏蔽门与列车门间异物事件比例}
 \end{figure}
 
-现先总结出所推荐的间距设置，无编号的：
-\begin{lstlisting}
-\begin{itemize}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=36pt, itemindent=0pt, labelsep=6pt, listparindent=24pt]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	
-\end{itemize}
-\end{lstlisting}
-效果：
-\begin{itemize}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=36pt, itemindent=0pt, labelsep=6pt, listparindent=24pt]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	
-\end{itemize}
-
-有编号的：
-\begin{lstlisting}
+本章以地铁屏蔽门与列车门间异物检测为主要研究任务，该任务存在两个主要的特点：
 \begin{enumerate}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=44pt, itemindent=0pt, labelsep=6pt, label=(\arabic*)]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+	\item 现有基于锚框的深度学习目标检测算法在锚框生成这一步骤中，通常存在两种生成方法，手工方法和聚类方法：手工方法即为手工挑选锚框的尺寸，而聚类方法则通常是使用K-means 聚类算法自动找到良好的锚框。然而，这两种方法均存在一定的缺陷：手工方法需要人工挑选，工作强度较大，网络虽然可以通过学习适当地调整锚框形状，但是如果从一开始就为网络选择更好的锚框，就可以让网络更容易学习并获得更好的检测结果。而使用K-means聚类算法来生成锚框则受限于K-means 聚类算法本身的局限性，聚类结果很容易受到初始值的选取影响。因此，如何更好地自动生成锚框是第一个挑战。
 	
-\end{enumerate}
-\end{lstlisting}
-效果：
-\begin{enumerate}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=44pt, itemindent=0pt, labelsep=6pt, label=(\arabic*)]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	
+	\item 以VGGNet\cite{vggnet}、InceptionNet系列\cite{Inceptionv1,Inceptionv2,Inceptionv4}和 ResNet系列\cite{resnetv1,resnetv2,resnetv3}为代表的卷积神经网络 (ConvNets)在多种视觉任务中取得了巨大的进展，它们的共同特点是顺序堆叠多个基本模块，并采用金字塔结构，但是却忽略了显式建模全局上下文信息的重要性。自从 2020 年以来，视觉 Transformer\cite{ViT,detr,Deformable-detr}进一步促进了视觉识别模型的发展，在ImageNet图像分类和下游任务上表现出比最先进的ConvNets更好的结果。这是因为与只进行局部建模的卷积操作相比，Transformer中的自注意力机制能够对全局的成对依赖进行建模，提供了一种更有效的空间信息编码方法。然而，在处理高分辨率图像时，自注意力机制导致的计算成本是相当大的。同时，许多研究\cite{Inside-OutsideNet,Combining-Multiple-Sensors-for-Event-Detection-of-Older-People,Attentive-Contexts-for-Object-Detection}已经证实，全局上下文信息可以为目标检测带来性能提升。在地铁这一复杂巨系统中，全局上下文信息对于异物检测同样也是至关重要的。因此，如何将Transformer擅于捕捉长距离依赖关系和ConvNets擅于提取局部特征这两个优点强强联手，在基于CNN的深度学习目标检测算法中有效的利用全局上下文信息，且不会大量增加模型的计算成本是第二个挑战。
 \end{enumerate}
 
-下面两节分别讨论参数设置规则。
-\subsection{垂直间距}
-摘抄宏包说明：
-\begin{itemize}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=36pt, itemindent=0pt, labelsep=6pt, listparindent=24pt]
-	\item topsep控制列表环境与上文之间的距离。第一项和前一段之间的空间。
+\section{异物检测模型GL-YOLO}
+目标检测，是通过分析目标的几何特征，从图像或视频中定位感兴趣的目标，准确地判断每个目标的具体类别，并给出每个目标的边界框。近年来，深度卷积神经网络依靠其不仅能够提取高层特征，提高特征的表达能力，还能够将特征提取、特征选择和特征分类融合在同一个模型中，通过端到端的训练，从整体上进行功能优化，增强特征的可分性等优点推动目标检测领域取得了重大进展。
 
-	\item itemsep 条目之间的距离
+基于深度卷积神经网络的目标检测算法大致可分为两类：双阶段目标检测算法和单阶段目标检测算法。双阶段目标检测算法先根据图像提取候选框，然后基于候选区域做二次修正得到检测点结果，检测精度较高，但检测速度较慢。这类算法的开山之作是R-CNN\cite{rcnn}，随后Fast-RCNN\cite{fastrcnn}、Faster-RCNN\cite{fasterrcnn}依次对其进行了改进。由于优秀的性能，Faster-RCNN至今仍然是目标检测领域很有竞争力的算法。随后，FPN\cite{FPN}、Mask-RCNN\cite{maskrcnn}等算法又针对Faster-RCNN的不足提出了改进，这进一步丰富了Faster-RCNN的组件，提升了它的性能。相较于双阶段目标检测算法，单阶段目标检测算法直接对图像进行计算生成检测结果，检测低速度快，但检测精度较低。这类算法的开山之作是YOLO\cite{yolov1,yolov2,yolov3}，随后SSD\cite{SSD}、Retinanet\cite{retinanet}依次对其进行了改进，后续有团队将一些有助于提升性能的技巧融入到YOLO系列算法中，在YOLOv3的基础上又提出了4个改进版本：YOLOv4~YOLOv7\cite{YOLOv4,glenn_jocher_2021_4679653,YOLOv6,yolov7}。由于后续各类技巧的融合，使得YOLO系列的检测准确率有了很大的进步，同时由于较快的运行速度，YOLO系列算法成为了工业界的主流。
 
-	\item parsep 条目里面段落之间的距离
- 
-	\item partopsep 条目与下面段落的距离。当环境开始一个新段落时，额外的空间被添加到 \textbackslash{}topsep。
-\end{itemize}
+对于目标检测任务而言，理论上讲，各个目标之间的关系是有助于提升目标检测效果的。然而基于卷积神经网络的目标检测算法，无论是单阶段还是双阶段目标检测，都没有很好地利用到注意力机制。针对这种情况，Relation Net\cite{Relationnet}和DETR\cite{detr}利用Transformer将注意力机制引入到目标检测领域。Relation Net利用Transformer对不同目标之间的关系建模，在特征之中融入了关系信息，实现了特征增强。DETR则是基于Transformer提出了全新的目标检测架构，开启了目标检测的新时代。
 
-论文中希望上述距离都为0pt，如：
-\begin{lstlisting}
-	\begin{itemize}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt]
-		\item 第一项。
-		\item 第二项
-		\item 第三项。
-	\end{itemize}
-\end{lstlisting}
-效果为：
-\begin{itemize}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt]
-	\item 第一项。
-	\item 第二项
-	\item 第三项。
-\end{itemize}
+本章提出的地铁屏蔽门与列车门间异物检测模型采用基于YOLOv5的目标检测方法，实现异物的自动检测，同时克服了传统YOLOv5模型对于全局上下文信息利用不足的缺陷，提高异物检测的精度。基于YOLOv5的地铁屏蔽门与列车门间异物检测模型结构GL-YOLO如图4-2所示，该模型以YOLOv5算法为基础，为了解决原始YOLOv5对于全局上下文信息利用不足而导致精度不高的问题，在基于YOLOv5算法的基础上引入Transformer和注意力机制，将原始YOLOv5中的卷积模块同Transformer和注意力机制相结合，使得模型有效的利用了局部信息和全局上下文信息；同时，使用K-Means++聚类算法代替K-Means聚类算法来生成锚框，缓解K-Means聚类算法收敛情况严重依赖于簇中心的初始化状况，从而一定程度上提高了检测精度和效果。
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=0.5]{Fig/GL-YOLO.pdf}
+	\caption{\label{GL-YOLO}地铁屏蔽门与列车门间异物检测模型GL-YOLO结构}
+\end{figure}
+
+\subsection{基于K-Means++的锚框生成}
+现有的锚框生成方法可以分为两类：手工方法和聚类方法。首先 anchor boxes 的尺寸是手工挑选的。虽然网络可以通过学习适当地调整 anchor boxes 形状，但是如果我们从一开始就为网络选择更好的 anchor boxes ，就可以让网络更容易学习并获得更好的检测结果。我们不用手工选择 anchor boxes，而是在训练集的边界框上的维度上运行 K-means 聚类算法，自动找到良好的 anchor boxes 。使用yolo系列通常需要通过kmeans聚类算法生成anchors，但kmeans算法本身具有一定的局限性，聚类结果容易受初始值选取影响。因此通过改进原kmeans\_for\_anchors.py实现 kmeans++聚类生成anchors。YOLOv5默认采用K-Means算法聚类COCO数据集生成的锚框，并采用遗传算法在训练过程中调整锚框，但是K-Means在聚类时，从其算法的原理可知，K-Means正式聚类之前首先需要完成的就是初始化个簇中心。同时，也正是因为这个原因，使得K-Means聚类算法存在着一个巨大的缺陷——收敛情况严重依赖于簇中心的初始化状况，采用K-Means++可以有效缓解这一问题，从而一定程度上能够提高检测精度和效果。K-Means++算法实际就是修改了K-Means算法的第一步操作之所以进行这样的优化，是为了让随机选取的中心点不再只是趋于局部最优解，而是让其尽可能的趋于全局最优解。要注意“尽可能”的三个字，即使是正常的K-Means++算法也无法保证百分百全局最优，在说取值原理之后我们就能知道为什么了思路就是我们要尽可能的保证各个簇的中心点的距离要尽可能的远当簇的中心尽可能的远的时候就能够尽可能的保证中心点之间不会在同一个簇内K-Means的迭代实际上就是簇的形状的修改，只要初始形状不太出格就会回归于正确形状。
+
+\subsection{全局上下文信息与局部信息的结合}
+如何较好的引入全局信息，而不造成太多计算量增加。以 VGGNet、Inception 系列和 ResNet 系列为代表的 2010-2020 年代的卷积神经网络 (ConvNets) 在多种视觉任务中取得了巨大的进展，它们的共同特点是顺序堆叠多个基本模块 (Basic Building Block)，并采用金字塔结构 (pyramid network architecture)，但是却忽略了显式建模全局上下文信息的重要性。SENet 模块系列模型突破了传统的 CNN 设计思路，将注意力机制引入到 CNN 中以捕获远程依赖，获得了更好的性能。
+
+自从 2020 年以来，视觉 Transformer (ViTs) 进一步促进了视觉识别模型的发展，在 ImageNet 图像分类和下游任务上表现出比最先进的 ConvNets 更好的结果。这是因为与只进行局部建模的卷积操作相比，Transformer 中的自注意力机制能够对全局的成对依赖进行建模，提供了一种更有效的空间信息编码方法。然而，在处理高分辨率图像时，自注意力机制导致的计算成本是相当大的。许多研究表明，目标周围的背景信息对于提升目标检测的精度有着积极意义。而在地铁这一复杂巨系统中，上下文信息对于异物检测同样至关重要。然而，目前许多目标检测算法对于全局上下文信息的利用还不够充分：基于CNN的算法受限于感受野，缺乏全局建模的能力；而最近的基于Transformer的算法擅长于捕获长局依赖关系但是在局部特征采集上却力有未逮，因此限制了检测的精度。本章为了提升对异物的检测准确率，重点研究将全局上下文信息与局部信息相结合利用的目标检测方法。当前一些广泛使用的基于卷积神经网络的目标检测算法，如SSD[12]、YOLOv3-5[13-15]等在定位目标时仅使用候选目标区域内部的特征信息，而捕获全局上下文信息的能力不足。然而，一些研究[16-18]已经证实，全局上下文信息也可以为目标检测带来性能提升。例如，如果想要检测一张图片中的特定汽车，通常与目标同时出现的物体（比如人、道路或另1辆车）可能会为检测目标提供有用的线索。因此，全局上下文信息可以与局部信息相结合，为目标检测提供有用的指导。具体到地铁屏蔽门与列车门间异物检测这一任务，以图1来对使用全局上下文信息同局部信息相结合来进行异物检测这一过程进行说明：图1（a）中3个语义相关性更强的位置（1个真实的塑料袋及其2个倒影）拥有更高的置信度。同时，可能会影响模型检测性能的背景噪声被成功抑制。然后，将图1（a）中的全局上下文信息同图1（b）中的局部信息相结合，引导模型成功检测到异物（图1（c））。YOLOv5s在检测过程中只利用候选目标区域内部的特征进行检测。然而，对于整张图片来说，背景有时候也能够提供有用的信息。例如，如果想要检测1张图片中的特定汽车，通常与目标同时出现的物体（例如人、道路或另1辆车）可能会为检测目标提供有用的线索。当然，并不是所有的背景信息都有利于提高目标检测性能，一些无意义的背景噪声可能会损害检测性能。因此，如何有效的利用全局上下文信息是一个值得研究的问题。
+大部分能够对全局上下文进行建模的注意力机制用于深度神经网络通常可以带来很好的性能提升，但将这些注意力机制应用于规模较小的网络中时，最终表现却不如将注意力机制应用于规模较大的深度神经网络。这主要是对于规模较小的网络来说，相比于引入注意力机制带来的效果提升，同时增加的大量运算是更无法接受的。以非局部[24]模块（如图4a）为例：非局部模块使用自注意力机制来对远程依赖进行建模。对于每个查询点，非局部模块首先计算查询点与所有点之间的成对关系以得到注意力图，然后通过加权和的方式聚合所有点的特征，从而得到与此查询点相关的全局特征，最终再分别将全局特征加到每个查询点的特征中，完成远程依赖的建模过程。非局部模块的这种操作，虽然有利于提升模型的检测效果，然而却导致了运算量过大的问题。同时，模型可以将这些全局上下文信息同局部特征信息相结合去检测异物，最终在提升模型检测效果的同时也不会大量增加模型的运算量。
 
 
-\subsection{水平间距}
-% 正文12pt
-水平间距调整比较复杂，对照宏包说明给出的图，下面内容参考了宏包原文和网络资料：
-\begin{itemize}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=36pt, itemindent=0pt, labelsep=6pt, listparindent=24pt]
-	\item 为页面的左边距）和该列表的左边距之间的空间。 必须是非负数。 它的值取决于表，则为页面的左边距）和该列表的左边距之间的空间。 必须是非负数。 它的值取决于列表级别。
-	\item rightmargin       列表环境右边的空白长度。类似于 \textbackslash{}leftmargin 但用于右边距。 它的值通常是 0pt。
-	\item labelsep       标号与列表第一项文本左侧的距离。标签框的末尾和第一项的文本之间的空间。 它的默认值为 0.5 em。
-	\item itemindent       条目的缩进距离。添加到项目第一行文本部分的水平缩进的额外缩进。 通过减去 labelsep 和 labelwidth 的值，相对于该参考点计算标签的起始位置。 它的值通常是 0pt。注：理解这个变量时，查看图\ref{enumitem}的顺序应该按照箭头从左到右，先leftmargin再itemindent，然后再labelsep，最后labelwidth。即箭头的起始点是基准点。若itemindent=0pt，则leftmargin-labelsep-编号长度的结果就是编号起始位置。
-	\item labelwidth       包含标签的框的标称宽度。 如果标签的自然宽度为 < labelwidth，则默认情况下，标签在宽度为 (labelwidth) 的框内右对齐排版。否则，使用自然宽度的框，这会导致该行上的文本缩进。 可以通过为 \textbackslash{}makelabel 命令提供定义来修改标签的排版方式。
-	\item listparindent       条目下面段落的缩进距离。除了以 litem 开头的段落之外，列表的每个段落的开头都有额外的缩进。 可以为负数，但通常为 0pt。
-\end{itemize}
+\subsection{损失函数}
 
-无编号的水平间距，给出两张方案
- 
-第一种：
-\begin{itemize}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=36pt, itemindent=0pt, labelsep=6pt, listparindent=24pt]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+\section{实验与结果分析}
+\subsection{实验数据集}
+为了评估本章所提出算法GL-YOLO的性能，将在公开数据集PASCAL VOC及第三章所构建的FODD这两个数据集上同其他先进检测模型进行对比实验。
+\subsubsection*{(1) PASCAL VOC}
+PASCAL VOC\cite{pascalvoc07, pascalvoc12}是一个常用的分类、识别和检测视觉目标的基准数据集。它的特点是包含多样化的场景以及多种物体类别。PASCAL VOC提供了一整套从数据标注到算法评估的标准流程，它采用了一种名为xml的标注方法，数据集中的每一张图片对应一个xml格式的文件，其中包含了该图片的名称、图片尺寸、物体类型、位置、大小、是否完整和预测难度等信息。PASCAL VOC（2005-2012）竞赛的目标主要是进行图像目标检测，数据集中包含了生活中常见的20种物体，包括飞机、自行车、鸟、船、瓶子、公共汽车、小汽车、猫、椅子、奶牛、餐桌、狗、马、摩托车、人、盆栽、羊、沙发、火车和显示器。
 
-	% 第一项的第二段。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	
-\end{itemize}
+PASCAL VOC有两个版本的数据集：VOC2007和VOC2012。VOC2007包含9963张标注过的图片，由train/val/test三部分组成，共标注出24,640个物体。而VOC2012是VOC2007数据集的升级版，一共有11530张图片。VOC2012的trainval/test包含08-11年的所有对应图片，并与VOC2007互斥，trainval中有11540张图片，共27450个物体。VOC2007和VOC2012数据集及二者的并集数据量对比如下表所示。
+\begin{table}[htbp]
+	\centering
+	\small
+	\caption{PASCAL VOC数据集详细信息}
+	\setlength{\tabcolsep}{1.3mm}
+	\begin{tabular}{ccccccccccc}
+		\toprule[2pt]
+		\multirow{2}[4]{*}{} & \multicolumn{2}{c}{训练集} & \multicolumn{2}{c}{验证集} & \multicolumn{2}{c}{训练与验证集} & \multicolumn{2}{c}{测试集} & \multicolumn{2}{c}{全部} \\
+		\cmidrule{2-11}          & 图片数   & 目标数   & 图片数   & 目标数   & 图片数   & 目标数   & 图片数   & 目标数   & 图片数   & 目标数 \\
+		\midrule
+		VOC07 & 2501  & 6301  & 2510  & 6307  & 5011  & 12608 & 4952  & 12032 & 9963  & 24640 \\
+		VOC12 & 5717  & 13609 & 5823  & 13841 & 11540 & 27450 & {\color{red} 11540} & {\color{red} 27450} & {\color{red} 23080} & {\color{red} 54900} \\
+		总计    & 8218  & 19910 & 8333  & 20148 & 16551 & 40058 & {\color{red} 16492} & {\color{red} 39482} & {\color{red} 33043} & {\color{red} 79540} \\
+		\bottomrule[2pt]
+	\end{tabular}%
+	\label{pascal voc}%
+\end{table}%
 
+表中，黑色字体所示数字是官方给定的，由于VOC2012数据集中测试集部分没有公布，因此红色字体所示数字为估计数据，按照PASCAL VOC通常的划分方法，即训练与验证集与测试集各占总数据量的一半。在后续的实验中，本章使用VOC2007的训练集+验证集和VOC2012的训练集+验证集训练，然后使用VOC2007的测试集测试，即在大多数论文中经常看到的07+12方法。
+\subsubsection*{(2) FODD}
 
-第二种：
-\begin{itemize}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=0pt, itemindent=36pt, labelsep=6pt, listparindent=24pt]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+\subsection{评价指标}
+在目标检测领域，均值平均精度（mean Average Precision, mAP）和每秒传输帧数（Frame Per Second, FPS）这两个评价指标是衡量目标检测算法准确性及检测速度的权威指标，被广泛应用于评价目标检测算法的性能。此外，由于本文所研究算法将面向实际应用，需要考虑到具体的硬件设备算力。因此，本文在此还将添加模型参数量（Parameters）、运算量（GFLOPs）作为额外的评价指标。下面给出这四个评价指标的具体计算方式：
+\subsubsection*{(1) mAP}
+\subsubsection*{(2) FPS}
+\subsubsection*{(3) Parameters}
+\subsubsection*{(4) GFLOPs}
+\subsection{实验环境及超参数设置}
+\subsection{FODD上的实验结果}
+\subsection{PASCAL VOC上的实验结果}
+\subsection{消融实验}
 
-	% 第一项的第二段。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	
-\end{itemize}
-
-推荐第一种。
-
-有编号的水平间距，下面给出三种方案：
-注：labelsep是某一项文字和编号框的距离，一般就设为一个空格6pt，要使编号左侧缩进两格，itemindent-labelsep要等于编号长度。注意编号是右对齐，向左扩展的。
-
-第一种方案是整体右移两格，文字距离编号一个空格，然后第二行文字和第一行对齐：
-\begin{enumerate}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=44pt, itemindent=0pt, labelsep=6pt, label=(\arabic*)]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-
-	% 第一项的第二段。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	
-\end{enumerate}
-
-第二种方案是和论文撰写规范的格式一样，注意不是论文撰写规范规定的格式，规范里没有规定这些格式。如：
-\begin{enumerate}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=0pt, itemindent=44pt, labelsep=6pt, listparindent=24pt, label=(\arabic*)]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-
-	% 第一项的第二段。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	
-\end{enumerate}
-
-第三种方案是整体右移两格，文字距离编号一个空格，第二行文字不再右移：
-\begin{enumerate}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=24pt, itemindent=20pt, labelsep=6pt, listparindent=20pt, label=(\arabic*)]
-	\item 第一项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-
-	% 第一项的第二段。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	\item 第二项。内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
-	
-\end{enumerate}
-
-推荐第一种。
-
-\section{enumerate标签样式}
-除上述小括号数字的编号方法外，还有斜体字母等。在使用enumerate的时候，label的问题就是使用计数的字符，是阿拉伯数字、罗马、中文、还是希腊字符的问题。
-
-\subsection{小括号阿拉伯数字}
-% 小括号阿拉伯数字，用 label=\arabic*)
-\begin{enumerate}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=0pt, itemindent=44pt, labelsep=6pt, listparindent=24pt, label=\arabic*)]
-	\item 第一项。
-
-	% 第一项的第二段。
-	\item 第二项
-	
-	% 第二项的第二段。
-	\item 第三项。
-	
-	% 第三项的第二段。
-\end{enumerate}
-
-
-
-\subsection{斜体字母}
-% 斜体字母，用 label=\emph{\alph*}
-\begin{enumerate}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=0pt, itemindent=44pt, labelsep=6pt, listparindent=24pt, label=\emph{\alph*}.]
-	\item 第一项。
-
-	% 第一项的第二段。
-	\item 第二项
-	
-	% 第二项的第二段。
-	\item 第三项。
-	
-	% 第三项的第二段。
-\end{enumerate}
-
-\subsection{大写罗马字母}
-% 大写罗马字母，用 label=(\Roman*)
-\begin{enumerate}[topsep = 0 pt, itemsep= 0 pt, parsep=0pt, partopsep=0pt, leftmargin=0pt, itemindent=44pt, labelsep=6pt, listparindent=24pt, label=(\Roman*)]
-	\item 第一项。
-
-	% 第一项的第二段。
-	\item 第二项
-	
-	% 第二项的第二段。
-	\item 第三项。
-	
-	% 第三项的第二段。
-\end{enumerate}
+\section{本章小结}
